@@ -1,10 +1,10 @@
 
 # Tiny Tapeout project information
 project:
-  title:        ""      "gdsCircles"
-  author:       ""      "KFL"
-  discord:      ""      "karla-fluna"
-  description:  ""      "prismatico"
+  title:        "gdsCircles"
+  author:       "KFL"
+  discord:      "karla-fluna"
+  description:  "prismatico"
   language:     "Verilog" # other examples include SystemVerilog, Amaranth, VHDL, etc
   clock_hz:     25175000       # Clock frequency in Hz (or 0 if not applicable)
 
