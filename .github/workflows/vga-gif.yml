@@ -1,0 +1,68 @@
+
+name: VGA Animation GIF
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "src/**"
+      - "info.yaml"
+      - ".github/workflows/vga-gif.yml"
+
+jobs:
+  generate-gif:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Install simulation dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            verilator \
+            build-essential \
+            make \
+            libsdl2-dev \
+            xvfb \
+            xauth \
+            libgl1-mesa-dri
+
+      - name: Download VGA simulator
+        run: |
+          git clone --depth 1 \
+            https://github.com/jar/vga_sim.git vga_sim
+
+      - name: Configure Verilator warnings
+        run: |
+          sed -i 's/VFLAGS = -Wall/VFLAGS = -Wno-fatal -Wall/' \
+            vga_sim/Makefile
+
+      - name: Compile VGA simulation
+        working-directory: vga_sim
+        run: make -j2 all
+
+      - name: Generate animated GIF
+        working-directory: vga_sim
+        env:
+          LIBGL_ALWAYS_SOFTWARE: "1"
+          SDL_AUDIODRIVER: dummy
+        run: |
+          xvfb-run -a -s "-screen 0 1280x720x24" \
+            ./obj_dir/Vtt_um_kfl_gdsc --gif 24
+
+          test -s output.gif
+
+          mkdir -p ../simulation-output
+          cp output.gif \
+            ../simulation-output/gdsCircles.gif
+
+      - name: Upload GIF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gdsCircles-animation
+          path: simulation-output/gdsCircles.gif
+          if-no-files-found: error
+          retention-days: 30
