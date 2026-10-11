@@ -41,13 +41,19 @@ module  tt_um_kfl_gdsc (
     wire speed = ui_in[0];      // 0=slow, 1=fast
     wire direction = ui_in[1];  // 0=outward, 1=inward
 
-    // Centered coordinates (signed)
-    wire signed [10:0] cx = $signed({1'b0, hpos}) - 11'sd320;
-    wire signed [10:0] cy = $signed({1'b0, vpos}) - 11'sd240;
+    
+    // Centered coordinates (8-bit wrapping)
+    wire signed [7:0] cx = $signed({1'b0, hpos}) - 11'sd320;
+    wire signed [7:0] cy = $signed({1'b0, vpos}) - 11'sd240;
 
-    // Absolute values
-    wire [9:0] abs_x = cx[10] ? (~cx[9:0] + 1'b1) : cx[9:0];
-    wire [9:0] abs_y = cy[10] ? (~cy[9:0] + 1'b1) : cy[9:0];
+    // Absolute values with 8-bit wrapping
+    wire [7:0] abs_x8 = cx[7] ? (~cx + 8'd1) : cx;
+    wire [7:0] abs_y8 = cy[7] ? (~cy + 8'd1) : cy;
+
+    // Extend to 10 bits for the existing radius logic
+    wire [9:0] abs_x = {2'b00, abs_x8};
+    wire [9:0] abs_y = {2'b00, abs_y8};
+
 
     // Distance approximation (max + min/2)
     wire [9:0] max_d = (abs_x > abs_y) ? abs_x : abs_y;
