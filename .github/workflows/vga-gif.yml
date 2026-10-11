@@ -12,7 +12,7 @@ on:
 jobs:
   generate-gif:
     runs-on: ubuntu-22.04
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     steps:
       - name: Checkout project
@@ -28,7 +28,8 @@ jobs:
             libsdl2-dev \
             xvfb \
             xauth \
-            libgl1-mesa-dri
+            libgl1-mesa-dri \
+            python3-pil
 
       - name: Download VGA simulator
         run: |
@@ -51,13 +52,40 @@ jobs:
           SDL_AUDIODRIVER: dummy
         run: |
           xvfb-run -a -s "-screen 0 1280x720x24" \
-            ./obj_dir/Vtt_um_kfl_gdsc --gif 24
+            ./obj_dir/Vtt_um_kfl_gdsc --gif 384
 
           test -s output.gif
 
           mkdir -p ../simulation-output
           cp output.gif \
             ../simulation-output/gdsCircles.gif
+
+      - name: Slow down GIF animation
+        run: |
+          python3 - <<'PY'
+          from PIL import Image, ImageSequence
+
+          path = "simulation-output/gdsCircles.gif"
+
+          with Image.open(path) as gif:
+              frames = [
+                  frame.convert("RGB")
+                  for frame in ImageSequence.Iterator(gif)
+              ]
+
+          frames[0].save(
+              path,
+              save_all=True,
+              append_images=frames[1:],
+              duration=100,
+              loop=0,
+              optimize=False
+          )
+
+          print("GIF generated successfully!")
+          print("Frames:", len(frames))
+          print("Duration:", len(frames) * 0.1, "seconds")
+          PY
 
       - name: Upload GIF artifact
         uses: actions/upload-artifact@v4
@@ -66,3 +94,4 @@ jobs:
           path: simulation-output/gdsCircles.gif
           if-no-files-found: error
           retention-days: 30
+
