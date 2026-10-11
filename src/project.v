@@ -42,8 +42,8 @@ module  tt_um_kfl_gdsc (
     wire direction = ui_in[1];  // 0=outward, 1=inward
 
     // Centered coordinates (signed)
-    wire signed [7:0] cx = $signed({1'b0, hpos}) - 11'sd320;
-    wire signed [7:0] cy = $signed({1'b0, vpos}) - 11'sd240;
+    wire signed [10:0] cx = $signed({1'b0, hpos}) - 11'sd320;
+    wire signed [10:0] cy = $signed({1'b0, vpos}) - 11'sd240;
 
     // Absolute values
     wire [9:0] abs_x = cx[10] ? (~cx[9:0] + 1'b1) : cx[9:0];
